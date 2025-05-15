@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>배드민턴 공 튀기기 기록</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      font-family: sans-serif;
+      background: #f9f9f9;
+    }
+    body {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    #left-panel {
+      width: 50%;
+      max-width: 400px;
+      background: white;
+      padding: 30px 20px;
+      box-sizing: border-box;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      height: 100%;
+    }
+    #left-panel h2 {
+      margin: 0 0 30px 0;
+      font-size: 28px;
+      color: #2c3e50;
+    }
+    input[type="text"], input[type="number"] {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px 5px 0 5px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #3498db;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    #record-section {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #login-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #student-info {
+      font-size: 18px;
+      margin-bottom: 15px;
+      font-weight: 600;
+      color: #34495e;
+    }
+
+    /* 오른쪽 패널 */
+    #right-panel {
+      width: 50%;
+      max-width: 400px;
+      background: white;
+      padding: 30px 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      height: 100%;
+    }
+    #right-panel h2 {
+      margin-top: 0;
+      color: #2c3e50;
+      font-size: 24px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px 8px;
+      text-align: center;
+      word-wrap: break-word;
+    }
+    th {
+      background-color: #3498db;
+      color: white;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <div id="left-panel">
+    <h2>배드민턴 공 튀기기</h2>
+
+    <div id="login-section">
+      <input type="text" id="grade" placeholder="학년" required />
+      <input type="text" id="class" placeholder="반" required />
+      <input type="text" id="number" placeholder="번호" required />
+      <button onclick="goToRecordPage()">다음</button>
+    </div>
+
+    <div id="record-section">
+      <p id="student-info"></p>
+      <label for="record-count">몇 번 성공했나요?</label>
+      <input type="number" id="record-count" min="0" />
+      <div>
+        <button onclick="submitRecord()">기록하기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="right-panel">
+    <h2>학급별 최고 기록</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>학년</th>
+          <th>반</th>
+          <th>번호</th>
+          <th>최고 기록</th>
+        </tr>
+      </thead>
+      <tbody id="result-table"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const records = {}; // key: "학년-반-번호", value: 최고기록
+    let currentKey = "";
+
+    function updateResultTable() {
+      const tbody = document.getElementById("result-table");
+      tbody.innerHTML = "";
+      const sortedEntries = Object.entries(records).sort((a, b) => b[1] - a[1]);
+      for (const [key, score] of sortedEntries) {
+        const [grade, classNum, number] = key.split("-");
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${grade}</td><td>${classNum}</td><td>${number}</td><td>${score}</td>`;
+        tbody.appendChild(row);
+      }
+    }
+
+    function goToRecordPage() {
+      const grade = document.getElementById("grade").value.trim();
+      const classNum = document.getElementById("class").value.trim();
+      const number = document.getElementById("number").value.trim();
+      if (!grade || !classNum || !number) {
+        alert("모든 정보를 입력해주세요");
+        return;
+      }
+      currentKey = `${grade}-${classNum}-${number}`;
+      document.getElementById("student-info").innerText = `${grade}학년 ${classNum}반 ${number}번`;
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("record-section").style.display = "flex";
+    }
+
+    function submitRecord() {
+      const countInput = document.getElementById("record-count");
+      const count = parseInt(countInput.value);
+      if (isNaN(count)) {
+        alert("숫자를 입력해주세요");
+        return;
+      }
+
+      if (!records[currentKey] || count > records[currentKey]) {
+        records[currentKey] = count;
+      }
+      updateResultTable();
+
+      // 입력칸 초기화 및 화면 전환
+      countInput.value = "";
+      document.getElementById("record-section").style.display = "none";
+      document.getElementById("login-section").style.display = "flex";
+
+      // 학년, 반, 번호 입력칸도 비우기
+      document.getElementById("grade").value = "";
+      document.getElementById("class").value = "";
+      document.getElementById("number").value = "";
+    }
+
+    // 초기 로드 시 테이블 초기화
+    updateResultTable();
+  </script>
+</body>
+</html>
+
